@@ -1,17 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 
-const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
-
-const SYSTEM_PROMPT = `你是 Enzo 的個人網站助手。Enzo 是一位專注於遊戲平台開發的前端工程師。
-
-關於 Enzo：
-- 技術棧：React、TypeScript、Tailwind CSS、Zustand、SWR
-- 經驗：3+ 年前端開發經驗
-- 專長：遊戲平台 UI、即時聊天系統、WebSocket 應用
-- 興趣：Unreal Engine 5 遊戲開發
-
-請用友善、專業的語氣回答訪客的問題。回答請簡潔，使用繁體中文。`
+// 使用後端 API（API Key 安全存放在伺服器）
+const API_URL = 'https://enzo-chatbot-api-snowy-firefly-6695.fly.dev/api/chat'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -61,29 +51,26 @@ export default function ChatBot() {
     if (!input.trim() || isLoading) return
 
     const userMessage: Message = { role: 'user', content: input.trim() }
-    setMessages((prev) => [...prev, userMessage])
+    const updatedMessages = [...messages, userMessage]
+    setMessages(updatedMessages)
     setInput('')
     setIsLoading(true)
 
     try {
-      const response = await fetch(GROQ_API_URL, {
+      const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${GROQ_API_KEY}`,
         },
         body: JSON.stringify({
-          model: 'llama-3.1-8b-instant',
-          messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...messages, userMessage],
-          temperature: 0.7,
-          max_tokens: 500,
+          messages: updatedMessages,
         }),
       })
 
       if (!response.ok) throw new Error('API 請求失敗')
 
       const data = await response.json()
-      const assistantContent = data.choices[0]?.message?.content || '抱歉，我無法回應。'
+      const assistantContent = data.message || '抱歉，我無法回應。'
 
       setMessages((prev) => [...prev, { role: 'assistant', content: '' }])
 
@@ -175,7 +162,7 @@ export default function ChatBot() {
               <div className="text-white font-semibold">Enzo's Assistant</div>
               <div className="text-xs text-white/50 flex items-center gap-1">
                 <span className="w-2 h-2 bg-[#00ffaa] rounded-full animate-pulse" />
-                Powered by Groq
+                Powered by Llama 3.1
               </div>
             </div>
             <button onClick={() => setIsOpen(false)} className="text-white/50 hover:text-white transition-colors p-1">
