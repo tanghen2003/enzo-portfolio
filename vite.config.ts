@@ -11,5 +11,5 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: true
   },
-  base: "/enzo-portfolio/"
+  base: "/enzo-portfolio/dist/"
 })
